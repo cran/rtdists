@@ -37,7 +37,7 @@
 #' \subsection{Quantile Function}{
 #' Due to the bivariate nature of the LBA, single accumulators only return defective CDFs that do not reach 1. Only the sum of all accumulators reaches 1. Therefore, \code{qLBA} can only return quantiles/RTs for any accumulator up to the maximal probability of that accumulator's CDF. This can be obtained by evaluating the CDF at \code{Inf} (see examples). 
 #' 
-#' Also note that quantiles (i.e., predicted RTs) are obtained by numerically minimizing the absolute difference between desired probabiliy and the value returned from \code{pLBA} using \code{\link{optimize}}. If the difference between the desired probability and probability corresponding to the returned quantile is above a certain threshold (currently 0.0001) no quantile is returned but \code{NA}. This can be either because the desired quantile is above the maximal probability for this accumulator or because the limits for the numerical integration are too small (default is \code{c(0, 10)}).
+#' Also note that quantiles (i.e., predicted RTs) are obtained by numerically minimizing the absolute difference between desired probability and the value returned from \code{pLBA} using \code{\link{optimize}}. If the difference between the desired probability and probability corresponding to the returned quantile is above a certain threshold (currently 0.0001) no quantile is returned but \code{NA}. This can be either because the desired quantile is above the maximal probability for this accumulator or because the limits for the numerical integration are too small (default is \code{c(0, 10)}).
 #' }
 #' 
 #' \subsection{RNG}{
@@ -59,7 +59,7 @@
 #' Heathcote, A., & Love, J. (2012). Linear deterministic accumulator models of simple choice. \emph{Frontiers in Psychology}, 3, 292. doi:10.3389/fpsyg.2012.00292
 #' 
 #' @name LBA
-#' @importFrom stats optimize
+#' @importFrom stats optimize uniroot
 #' 
 #' @example examples/examples.lba.R
 #' 
@@ -211,8 +211,9 @@ pLBA <-  function(rt, response, A, b, t0, ..., st0=0, distribution = c("norm", "
 }
 
 # rt, response, A, b, t0, ..., st0=0, distribution = c("norm", "gamma", "frechet", "lnorm"), args.dist = list(), silent = FALSE
-inv_cdf_lba <- function(x, response, A, b, t0, ..., st0, distribution, args.dist, value) {
-  abs(value - pLBA(rt=x, response=response, A=A, b = b, t0 = t0, ..., st0=st0, distribution=distribution, args.dist=args.dist, silent=TRUE))
+inv_cdf_lba <- function(x, response, A, b, t0, ..., st0, distribution, args.dist, value, abs = TRUE) {
+  if (abs) abs(value - pLBA(rt=x, response=response, A=A, b = b, t0 = t0, ..., st0=st0, distribution=distribution, args.dist=args.dist, silent=TRUE))
+  else (value - pLBA(rt=x, response=response, A=A, b = b, t0 = t0, ..., st0=st0, distribution=distribution, args.dist=args.dist, silent=TRUE))
 }
 
 
@@ -235,13 +236,25 @@ qLBA <-  function(p, response, A, b, t0, ..., st0=0, distribution = c("norm", "g
   t0 <- check_i_arguments(t0, nn=nn, n_v=n_v)
   st0 <- rep(st0, length.out = nn)
   out <- vector("numeric", nn)
+  p <- unname(p)
+  
   for (i in seq_len(nn)) {
     tmp <- do.call(optimize, args = c(f=inv_cdf_lba, interval = list(interval), response = list(response[i]), A=ret_arg(A, i), b=ret_arg(b, i), t0=ret_arg(t0, i), sapply(dots, function(z, i) sapply(z, ret_arg2, which = i, simplify=FALSE), i=i, simplify=FALSE), args.dist = list(args.dist), distribution=distribution, st0 = list(st0[i]), value =p[i], tol = .Machine$double.eps^0.5))
-    #browser()
     if (tmp$objective > 0.0001) {
-      warning("Cannot obtain RT that is less than 0.0001 away from desired p = ", p[i], ".\nIncrease interval or obtain for different response.", call. = FALSE)
-      out[i] <- NA
-    } else out[i] <- tmp[[1]]
+      tmp <- do.call(optimize, args = c(f=inv_cdf_lba, interval = list(c(min(interval),max(interval)/2)), response = list(response[i]), A=ret_arg(A, i), b=ret_arg(b, i), t0=ret_arg(t0, i), sapply(dots, function(z, i) sapply(z, ret_arg2, which = i, simplify=FALSE), i=i, simplify=FALSE), args.dist = list(args.dist), distribution=distribution, st0 = list(st0[i]), value =p[i], tol = .Machine$double.eps^0.5))
+    }
+    if (tmp$objective > 0.0001) {
+      try({
+        uni_tmp <- do.call(uniroot, args = c(f=inv_cdf_lba, interval = list(c(min(interval),max(interval)/2)), response = list(response[i]), A=ret_arg(A, i), b=ret_arg(b, i), t0=ret_arg(t0, i), sapply(dots, function(z, i) sapply(z, ret_arg2, which = i, simplify=FALSE), i=i, simplify=FALSE), args.dist = list(args.dist), distribution=distribution, st0 = list(st0[i]), value =p[i], tol = .Machine$double.eps^0.5, abs = FALSE))
+      tmp$objective <- uni_tmp$f.root
+      tmp$minimum <- uni_tmp$root
+      }, silent = TRUE)
+    }
+    if (tmp$objective > 0.0001) {
+      tmp[["minimum"]] <- NA
+      warning("Cannot obtain RT that is less than 0.0001 away from desired p = ", p[i], ".\nIncrease/decrease interval or obtain for different boundary.", call. = FALSE)
+    }
+    out[i] <- tmp[["minimum"]]
   }
   return(out)
 }
