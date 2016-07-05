@@ -9,22 +9,23 @@
 \alias{rdiffusion}
 \title{The Ratcliff Diffusion Model}
 \usage{
-ddiffusion(rt, boundary = "upper", a, v, t0, z = 0.5, d = 0, sz = 0,
-  sv = 0, st0 = 0, precision = 3)
+ddiffusion(rt, response = "upper", a, v, t0, z = 0.5 * a, d = 0, sz = 0,
+  sv = 0, st0 = 0, s = 1, precision = 3)
 
-pdiffusion(rt, boundary = "upper", a, v, t0, z = 0.5, d = 0, sz = 0,
-  sv = 0, st0 = 0, precision = 3, maxt = 10000)
+pdiffusion(rt, response = "upper", a, v, t0, z = 0.5 * a, d = 0, sz = 0,
+  sv = 0, st0 = 0, s = 1, precision = 3, maxt = 10000)
 
-qdiffusion(p, boundary = "upper", a, v, t0, z = 0.5, d = 0, sz = 0,
-  sv = 0, st0 = 0, precision = 3, maxt = 10000, interval = c(0, 10))
+qdiffusion(p, response = "upper", a, v, t0, z = 0.5 * a, d = 0, sz = 0,
+  sv = 0, st0 = 0, s = 1, precision = 3, maxt = 10000,
+  interval = c(0, 10), scale_p = FALSE, scale_max = Inf)
 
-rdiffusion(n, a, v, t0, z = 0.5, d = 0, sz = 0, sv = 0, st0 = 0,
-  precision = 3)
+rdiffusion(n, a, v, t0, z = 0.5 * a, d = 0, sz = 0, sv = 0, st0 = 0,
+  s = 1, precision = 3)
 }
 \arguments{
-\item{rt}{a vector of RTs.}
+\item{rt}{a vector of RTs. Or for convenience also a \code{data.frame} with columns \code{rt} and \code{response} (such as returned from \code{rdiffusion} or \code{\link{rLBA}}). See examples.}
 
-\item{boundary}{character vector. Which boundary should be tested? Possible values are \code{c("upper", "lower")}, possibly abbreviated and \code{"upper"} being the default. Alternatively, a numeric vector with values 1=lower and 2=upper. For convenience, /code{boundary} is converted via /code{as.numeric} also allowing factors (see examples).}
+\item{response}{character vector. Which response boundary should be tested? Possible values are \code{c("upper", "lower")}, possibly abbreviated and \code{"upper"} being the default. Alternatively, a numeric vector with values 1=lower and 2=upper. For convenience, \code{response} is converted via \code{as.numeric} also allowing factors (see examples). Ignored if the first argument is a \code{data.frame}.}
 
 \item{a}{threshold separation. Amount of information that is considered for a decision. Large values indicate a conservative decisional style. Typical range: 0.5 < \code{a} < 2}
 
@@ -32,55 +33,67 @@ rdiffusion(n, a, v, t0, z = 0.5, d = 0, sz = 0, sv = 0, st0 = 0,
 
 \item{t0}{non-decision time or response time constant (in seconds). Lower bound for the duration of all non-decisional processes (encoding and response execution). Typical range: 0.1 < \code{t0} < 0.5}
 
-\item{z}{relative starting point. Indicator of an a priori bias in decision making. When the relative starting point \code{z} deviates from 0.5, the amount of information necessary for a decision differs between response alternatives. Typical range: 0.3 < \code{z} < 0.7. Default is 0.5 (i.e., no bias).}
+\item{z}{starting point. Indicator of an a priori bias in decision making. When the relative starting point \code{z} deviates from \code{0.5*a}, the amount of information necessary for a decision differs between response alternatives. Default is \code{0.5*a} (i.e., no bias).}
 
 \item{d}{differences in speed of response execution (in seconds). Positive values indicate that response execution is faster for responses linked to the upper threshold than for responses linked to the lower threshold. Typical range: -0.1 < \code{d} < 0.1. Default is 0.}
 
-\item{sz}{inter-trial-variability of (relative) starting point. Range of a uniform distribution with mean \code{z} describing the distribution of actual starting points from specific trials. Minimal impact on the RT distributions. Can be fixed to 0 in most applications. Typical range: 0 < \code{sz} < 0.5. Default is 0.}
+\item{sz}{inter-trial-variability of starting point. Range of a uniform distribution with mean \code{z} describing the distribution of actual starting points from specific trials. Minimal impact on the RT distributions, values different from 0 can predict slow errors. Can be fixed to 0 in most applications. Typical range: 0 < \code{sz} < 0.5. Default is 0.}
 
-\item{sv}{inter-trial-variability of drift rate. Standard deviation of a normal distribution with mean \code{v} describing the distribution of actual drift rates from specific trials.     Minimal impact on the RT distributions. Can be fixed to 0 in most applications. Typical range: 0 < \code{sv} < 2. Default is 0.}
+\item{sv}{inter-trial-variability of drift rate. Standard deviation of a normal distribution with mean \code{v} describing the distribution of actual drift rates from specific trials. Minimal impact on the RT distributions, values different from 0 can predict fast errors. Can be fixed to 0 in most applications. Typical range: 0 < \code{sv} < 2. Default is 0.}
 
-\item{st0}{inter-trial-variability of non-decisional components. Range of a uniform distribution with mean \code{t0 + st0/2} describing the distribution of actual \code{t0} values across trials. Accounts for response times below \code{t0}. Reduces skew of predicted RT distributions. Typical range: 0 < \code{st0} < 0.2. Default is 0.}
+\item{st0}{inter-trial-variability of non-decisional components. Range of a uniform distribution with mean \code{t0 + st0/2} describing the distribution of actual \code{t0} values across trials. Accounts for response times below \code{t0}. Reduces skew of predicted RT distributions. Can be fixed to 0 in most applications. Typical range: 0 < \code{st0} < 0.2. Default is 0.}
+
+\item{s}{diffusion constant; standard deviation of the random noise of the diffusion process (i.e., within-trial variability), scales \code{a}, \code{v}, and \code{sv}. Needs to be fixed to a constant in most applications. Default is 1. Note that the default used by Ratcliff and in other applications is often 0.1.}
 
 \item{precision}{\code{numerical} scalar value. Precision of calculation. Corresponds roughly to the number of decimals of the predicted CDFs that are calculated accurately. Default is 3.}
 
-\item{maxt}{maximum \code{rt} allowed, used to stop integration problems (\code{prd} only).}
+\item{maxt}{maximum \code{rt} allowed, used to stop integration problems. \emph{Currently ignored as numerical integration works fine with Inf.}}
 
-\item{p}{vector of probabilities.}
+\item{p}{vector of probabilities. Or for convenience also a \code{data.frame} with columns \code{p} and \code{response}. See examples.}
 
 \item{interval}{a vector containing the end-points of the interval to be searched for the desired quantiles (i.e., RTs) in \code{qdiffusion}. Default is \code{c(0, 10)}.}
+
+\item{scale_p}{logical. Should entered probabilities automatically be scaled by maximally predicted probability? Default is \code{FALSE}. Convenience argument for obtaining predicted quantiles. Can be slow as the maximally predicted probability is calculated individually for each \code{p}.}
+
+\item{scale_max}{numerical scalar. Value at which maximally predicted RT should be calculated if \code{scale_p} is \code{TRUE}.}
 
 \item{n}{is a desired number of observations.}
 }
 \value{
 \code{ddiffusion} gives the density, \code{pdiffusion} gives the distribution function, \code{qdiffusion} gives the quantile function (i.e., predicted RTs), and \code{rdiffusion} generates random response times and decisions (returning a \code{data.frame} with columns \code{rt} (numeric) and \code{response} (factor)).
 
-The length of the result is determined by \code{n} for \code{rrd}, and is equal to the length of \code{rt} for \code{drd} and \code{prd}.
+The length of the result is determined by \code{n} for \code{rdiffusion}, equal to the length of \code{rt} for \code{ddiffusion} and \code{pdiffusion}, and equal to the length of \code{p} for \code{qdiffusion}.
 
-The distribution parameters (as well as \code{boundary}) are recycled to the length of the result. In other words, the functions are completely vectorized for all parameters and even the boundary.
+The distribution parameters (as well as \code{response}) are recycled to the length of the result. In other words, the functions are completely vectorized for all parameters and even the response boundary.
 }
 \description{
-Density, distribution function, quantile function, and random generation for the Ratcliff diffusion model with eight parameters: \code{a} (threshold separation), \code{z} (relative starting point), \code{v} (drift rate), \code{t0} (non-decision time/response time constant), \code{d} (differences in speed of response execution), \code{sv} (inter-trial-variability of drift), \code{st0} (inter-trial-variability of non-decisional components), and \code{sz} (inter-trial-variability of relative starting point).
+Density, distribution function, quantile function, and random generation for the Ratcliff diffusion model with following parameters: \code{a} (threshold separation), \code{z} (starting point), \code{v} (drift rate), \code{t0} (non-decision time/response time constant), \code{d} (differences in speed of response execution), \code{sv} (inter-trial-variability of drift), \code{st0} (inter-trial-variability of non-decisional components), \code{sz} (inter-trial-variability of relative starting point), and \code{s} (diffusion constant). \strong{Note that the parameterization or defaults of non-decision time variability \code{st0} and diffusion constant \code{s} differ from what is often found in the literature and that the parameterization of \code{z} and \code{sz} have changed compared to previous versions (now absolute and not relative).}
 }
 \details{
 The Ratcliff diffusion model (Ratcliff, 1978) is a mathematical model for two-choice discrimination tasks. It is based on the assumption that information is accumulated continuously until one of two decision thresholds is hit. For more information, see Voss, Rothermund, and Voss (2004), Voss, Nagler, and Lerche (2013), or Wagenmakers (2009).
 
-All functions are fully vectorized across all parameters as well as the boundary. This allows for trialwise parameters for each parameter. 
+All functions are fully vectorized across all parameters as well as the response. This allows for trialwise parameters for each parameter. 
 
-\subsection{Quantile Function}{
-For the time being, the cumulative probability function (\code{pdiffusion}) uses numerical integration of \code{ddiffusion} via the R \code{\link{integrate}} function. While this is somewhat slow, it reliably produces correct results. Any problems in the numerical integration is passed on as a warning.
+For convenience, all functions (with the exception of \code{rdiffusion}) allow that the first argument is a \code{data.frame} containing the information of the first and second argument in two columns (i.e., \code{rt}/\code{p} and \code{response}). Other columns will be ignored. This allows, for example, to pass the \code{data.frame} generated by \code{rdiffusion} directly to \code{pdiffusion}. See examples.
+
+\subsection{Distribution Function (CDF)}{
+For the time being, the cumulative probability function (\code{pdiffusion}) uses numerical integration of \code{ddiffusion} via \code{\link{integral}} from package \pkg{pracma}. While this is somewhat slow, it reliably produces correct results. Please report all issues with the CDF to the package maintainer.
 }
 
 \subsection{Quantile Function}{
-Due to the bivariate nature of the diffusion model, the diffusion processes reaching each boundary only return the defective CDF that does not reach 1. Only the sum of the CDF for both boundaries reaches 1. Therefore, \code{qdiffusion} can only return quantiles/RTs for any accumulator up to the maximal probability of that accumulator's CDF. This can be obtained by evaluating the CDF at a high value or \code{Inf} (the latter can be slow). See examples. 
+Due to the bivariate nature of the diffusion model, the diffusion processes reaching each response boundary only return the defective CDF that does not reach 1. Only the sum of the CDF for both boundaries reaches 1. Therefore, \code{qdiffusion} can only return quantiles/RTs for any accumulator up to the maximal probability of that accumulator's CDF. This can be obtained by evaluating the CDF at \code{Inf}. 
+
+As a conveniece for the user, if \code{scale_p = TRUE} in the call to \code{qdiffusion} the desired probabilities are automatically scaled by the maximal probability for the corresponding response. Note that this can be slow as the maximal probability is calculated separately for each desired probability. See examples.
 
 Also note that quantiles (i.e., predicted RTs) are obtained by numerically minimizing the absolute difference between desired probability and the value returned from \code{pdiffusion} using \code{\link{optimize}}. If the difference between the desired probability and probability corresponding to the returned quantile is above a certain threshold (currently 0.0001) no quantile is returned but \code{NA}. This can be either because the desired quantile is above the maximal probability for this accumulator or because the limits for the numerical integration are too small (default is \code{c(0, 10)}).
 }
 }
 \note{
-In the present code, the diffusion constant s is set to 1. This differs from, for example, the work of Roger Ratcliff who usually uses a diffusion constant of s=0.1. Estimates for a, z, and v depend on the chosen diffusion constant. These parameters can be transformed to the case of s = 1 by dividing the estimated values by the diffusion constant used for the estimation procedure. 
-
 The parameterization of the non-decisional components, \code{t0} and \code{st0}, differs from the parameterization used by, for example, Andreas Voss or Roger Ratcliff in that \code{t0} is \emph{not} the lower bound of the uniform distribution of length \code{st0}, but its midpoint.
+
+The default diffusion constant \code{s} is 1 and not 0.1 as in most applications of Roger Ratcliff and others.
+
+We have changed the parameterization of the start point \code{z} which is now the absolute start point (it was the relative start point in previous versions of \pkg{rtdists}). 
 
 RTs need to be sorted (in increasing order) for \code{pdiffusion}.
 }
@@ -89,23 +102,25 @@ RTs need to be sorted (in increasing order) for \code{pdiffusion}.
 ## identical calls (but different random values)
 rt1 <- rdiffusion(500, a=1, v=2, t0=0.5)
 head(rt1)
-rt2 <- rdiffusion(500, a=1, v=2, t0=0.5, z=0.5, d=0, sz=0, sv=0, st0=0)
+rt2 <- rdiffusion(500, a=1, v=2, t0=0.5, d=0, sz=0, sv=0, st0=0)
 head(rt2)
   
-# get density for random RTs:
-sum(log(ddiffusion(rt1$rt, rt1$response, a=1, v=2, t0=0.5)))  # boundary is factor
-sum(log(ddiffusion(rt1$rt, as.numeric(rt1$response), a=1, v=2, t0=0.5))) # boundary is numeric
-sum(log(ddiffusion(rt1$rt, as.character(rt1$response), a=1, v=2, t0=0.5))) # boundary is character
+# get density for random RTs (possible to specify arguments for pdiffusion in same way):
+sum(log(ddiffusion(rt1$rt, rt1$response, a=1, v=2, t0=0.5)))  # response is factor
+sum(log(ddiffusion(rt1$rt, as.numeric(rt1$response), a=1, v=2, t0=0.5))) # response is numeric
+sum(log(ddiffusion(rt1$rt, as.character(rt1$response), a=1, v=2, t0=0.5))) # response is character
+sum(log(ddiffusion(rt1, a=1, v=2, t0=0.5))) # response is data.frame
+
 
 sum(log(ddiffusion(rt2$rt, rt2$response, a=1, v=2, t0=0.5)))
 
 # can we recover the parameters?
-ll_diffusion <- function(pars, rt, boundary) 
+ll_diffusion <- function(pars, rt, response) 
 {
   densities <- tryCatch(
-    ddiffusion(rt, boundary=boundary, 
+    ddiffusion(rt, response=response, 
                a=pars[1], v=pars[2], t0=pars[3], 
-               z=0.5, sz=pars[4], 
+               sz=pars[4], 
                st0=pars[5], sv=pars[6]), 
     error = function(e) 0)
   if (any(densities == 0)) return(1e6)
@@ -115,46 +130,76 @@ ll_diffusion <- function(pars, rt, boundary)
 \dontrun{
 start <- c(runif(2, 0.5, 3), 0.1, runif(3, 0, 0.5))
 names(start) <- c("a", "v", "t0", "sz", "st0", "sv")
-recov <- nlminb(start, ll_diffusion, lower = 0, rt=rt1$rt, boundary=rt1$response)
+recov <- nlminb(start, ll_diffusion, lower = 0, rt=rt1$rt, response=rt1$response)
 round(recov$par, 3)
-#     a     v    t0    sz   st0    sv 
-# 1.017 2.186 0.505 0.345 0.000 0.000 
+#    a     v    t0    sz   st0    sv 
+#0.954 1.764 0.503 0.000 0.000 0.000 
 }
 
 # plot density:
-curve(ddiffusion(x, a=1, v=2, t0=0.5, boundary = "upper"), 
+curve(ddiffusion(x, a=1, v=2, t0=0.5, response = "upper"), 
       xlim=c(0,3), main="Density of upper responses", ylab="density", xlab="response time")
-curve(ddiffusion(x, a=1, v=2, t0=0.5, st0=0.2, boundary = "upper"), 
+curve(ddiffusion(x, a=1, v=2, t0=0.5, st0=0.2, response = "upper"), 
       add=TRUE, lty = 2)
 legend("topright", legend=c("no", "yes"), title = "Starting Point Variability?", lty = 1:2)
 
 # plot cdf:
-curve(pdiffusion(x, a=1, v=2, t0=0.5, st0=0.2, boundary="u"), 
+curve(pdiffusion(x, a=1, v=2, t0=0.5, st0=0.2, response="u"), 
      xlim = c(0, 3),ylim = c(0,1), 
      ylab = "cumulative probability", xlab = "response time",
      main = "CDF of diffusion model with start point variability")
-curve(pdiffusion(x, a=1, v=2, t0=0.5, st0=0.2, boundary="l"), 
+curve(pdiffusion(x, a=1, v=2, t0=0.5, st0=0.2, response="l"), 
      add=TRUE, lty = 2)
-legend("topleft", legend=c("upper", "lower"), title="boundary", lty=1:2)
+legend("topleft", legend=c("upper", "lower"), title="response boundary", lty=1:2)
+
+\dontrun{
+### qdiffusion can only return values up to maximal predicted probability:
+(max_p <- pdiffusion(Inf, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, response="u"))
+# [1] 0.87
+# (Note that with the current integration routine for pdiffusion use Inf and not smaller values.)
+
+qdiffusion(0.87, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, response="u")
+# [1] 1.945802
+
+qdiffusion(0.88, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, response="u")
+# NA with warning.
+
+# to get predicted quantiles, scale required quantiles by maximally predicted response rate:
+qs <- c(.1, .3, .5, .7, .9)
+qdiffusion(qs*max_p, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, response="u")
+
+# or set scale_p to TRUE which scales automatically by maximum p
+# (but can be slow as it calculates max_p for each probability separately) 
+qdiffusion(qs, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, response="u", scale_p = TRUE)
 
 
-### qLBA can only return values up to maximal predicted probability:
-# maximum probability for a given set
-pdiffusion(20, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, boundary="u")
-# [1] 0.8705141
+# qdiffusion also accepts a data.frame as first argument:
+t3 <- data.frame(p = rep(c(0.05, 0.1, 0.87), 2), response = rep(c("upper", "lower"), each = 3))
+#      p response
+# 1 0.05    upper
+# 2 0.10    upper
+# 3 0.87    upper
+# 4 0.05    lower
+# 5 0.10    lower
+# 6 0.87    lower
+qdiffusion(t3, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5)
+}
 
-# equal but much slower:
-# pdiffusion(Inf, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, boundary="u") 
-# [1] 0.8705141
+## LBA and diffusion can be used interchangeably:
+rt1 <- rLBA(500, A=0.5, b=1, t0 = 0.5, mean_v=c(2.4, 1.6), sd_v=c(1,1.2))
+rt2 <- rdiffusion(500, a=1, v=2, t0=0.5)
 
-qdiffusion(0.87, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, boundary="u")
-# [1] 1.769253
+# data can also be passed as data.frame (same is true for pLBA):
+sum(log(dLBA(rt1, A=0.5, b=1, t0 = 0.5, mean_v=c(2.4, 1.6), sd_v=c(1,1.2))))
+sum(log(dLBA(rt2, A=0.5, b=1, t0 = 0.5, mean_v=c(2.4, 1.6), sd_v=c(1,1.2))))
 
-qdiffusion(0.88, a=1, v=2, t0=0.5, st0=0.2, sz = 0.1, sv = 0.5, boundary="u")
-# NA
+sum(log(ddiffusion(rt1, a=1, v=2, t0=0.5)))
+sum(log(ddiffusion(rt2, a=1, v=2, t0=0.5)))
+
+
 }
 \author{
-Underlying C code by Jochen Voss and Andreas Voss. Porting and R wrapping by Matthew Gretton, Andrew Heathcote, and Henrik Singmann. \code{qdiffusion} by Henrik Singmann.
+Underlying C code by Jochen Voss and Andreas Voss. Porting and R wrapping by Matthew Gretton, Andrew Heathcote, Scott Brown, and Henrik Singmann. \code{qdiffusion} by Henrik Singmann.
 }
 \references{
 Ratcliff, R. (1978). A theory of memory retrieval. \emph{Psychological Review}, 85(2), 59-108.

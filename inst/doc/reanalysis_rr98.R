@@ -119,17 +119,17 @@ p1 + as.layer(p2)
 
 ## ------------------------------------------------------------------------
 # objective function for diffusion with 1 a. loops over drift to assign drift rates to strength
-objective_diffusion_separate <- function(pars, rt, boundary, drift, ...) {
+objective_diffusion_separate <- function(pars, rt, response, drift, ...) {
   non_v_pars <- grep("^v", names(pars), invert = TRUE, value = TRUE)
   base_par <- length(non_v_pars)  # number of non-drift parameters
   densities <- vector("numeric", length(rt))
   for (i in seq_along(levels(drift))) {
     densities[drift == levels(drift)[i]] <- tryCatch(
-      ddiffusion(rt[drift == levels(drift)[i]], boundary=boundary[drift == levels(drift)[i]], 
+      ddiffusion(rt[drift == levels(drift)[i]], response=response[drift == levels(drift)[i]], 
                  a=pars["a"], t0=pars["t0"],  
                  sv=pars["sv"],
                  sz=if ("sz" %in% non_v_pars) pars["sz"] else 0.1,
-                 z=if ("z" %in% non_v_pars) pars["z"] else 0.5,
+                 z=if ("z" %in% non_v_pars) pars["z"]*pars["a"] else 0.5*pars["a"],
                  st0=if ("st0" %in% non_v_pars) pars["st0"] else 0, 
                  v=pars[base_par+i]), 
       error = function(e) 0)  
@@ -170,14 +170,14 @@ ensure_fit <- function(data, start_function, objective_function, base_pars, n_dr
     while(start_ll == 1e+06) {
       start <- start_function(base_pars, n_drift=n_drift)
       start_ll <- objective_function(start, 
-                                     rt = data$rt, boundary = data$response_num, 
+                                     rt = data$rt, response = data$response_num, 
                                      drift = factor(data$strength_bin, seq_len(n_drift)), 
                                      instruction = data$instruction)
     }
     cat("\nstart fitting.\n") # just for information to see if it is stuck
     
     fit <- nlminb(start, objective_function, 
-                  rt = data$rt, boundary = data$response_num, 
+                  rt = data$rt, response = data$response_num, 
                   drift = factor(data$strength_bin, seq_len(n_drift)), 
                   instruction = data$instruction,
                   lower = lower)
@@ -226,46 +226,18 @@ knitr::kable(pars_separate)
 #  fits_separate_b <- rr98 %>%
 #    group_by(id, instruction) %>% # we loop across both, id and instruction
 #    do(diffusion = ensure_fit(data = ., start_function = get_start,
-#                              objective_function = objective_diffusion_separate_alt,
+#                              objective_function = objective_diffusion_separate,
 #                              base_pars = c("a", "t0", "sv", "sz", "z"))) %>% ungroup()
 #  
 #  pars_separate_b <- as.data.frame(fits_separate_b %>% group_by(id, instruction) %>% do(as.data.frame(t(.$diffusion[[1]][["par"]]))) %>% ungroup())
 #  pars_separate_b$ll <- (fits_separate_b %>% group_by(id, instruction) %>% do(ll = .$diffusion[[1]][["objective"]]) %>%  summarize(ll2 = mean(ll[[1]])) %>% as.data.frame())[[1]]
-#  
+#  if (!("st0" %in% colnames(pars_separate_b))) pars_separate_b$st0 <- 0
+#  if (!("z" %in% colnames(pars_separate_b))) pars_separate_b$z <- 0.5
+#  if (!("sz" %in% colnames(pars_separate_b))) pars_separate_b$sz <- 0.1
 #  
 #  all.equal(pars_separate, pars_separate_b, tolerance = 0.001)
 #  
 #  save(fits_separate, fits_separate_b, file = "rr98_full-diffusion_fits.rda")
-#  
-#  # save for fast-dm
-#  
-#  tmp_out <- rr98 %>% filter(id == "jf" & instruction == "speed") %>% mutate(resp = response_num-1) %>% select(strength_bin, resp, rt)
-#  write.table(tmp_out, file = "jf_speed.dat", sep = "\t", row.names = FALSE, col.names = FALSE, quote =FALSE)
-#  
-#  rr98 %>% group_by(id, instruction, strength_bin, response) %>% summarise(n = n()) %>% spread(strength_bin, n)
-#  
-#  ## single tries
-#  dput(pars_separate[1,])
-#  
-#  pdiffusion(rt = 30, boundary = "upper", a = 0.579802547413743, t0 = 0.195986367994755, sv = 0.897142805898331, sz = 0.596868027475543, z = 0.430283354091839, st0 = 0.144057563742441, d = 0.00190627271452611, v = -4.92625351825116)
-#  
-#  # JF speed, v_1
-#  (xp <- pdiffusion(rt = 20, boundary = "lower", a = 0.579802547413743, t0 = 0.195986367994755, sv = 0.897142805898331, sz = 0.596868027475543, z = 0.430283354091839, st0 = 0.144057563742441, d = 0.00190627271452611, v = -4.92625351825116))
-#  
-#  qdiffusion(xp*quantiles, "lower", a = 0.579802547413743, t0 = 0.195986367994755, sv = 0.897142805898331, sz = 0.596868027475543, z = 0.430283354091839, st0 = 0.144057563742441, d = 0.00190627271452611, v = -4.92625351825116)
-#  
-#  (xp <- pdiffusion(rt = 20, boundary = "lower", a = 0.667287, t0 = 0.254885, sv = 0.448566, sz = 0.416655, z = 0.500000, st0 = 0, d = 0, v = -3.388013))
-#  
-#  qdiffusion(xp*quantiles, "lower",  a = 0.667287, t0 = 0.254885, sv = 0.448566, sz = 0.416655, z = 0.500000, st0 = 0, d = 0, v = -3.388013)
-#  
-#  (xp <- pdiffusion(rt = 20, boundary = "lower", a = 0.667287, t0 = 0.254885, sv = 0.448566, sz = 0.416655, z = 0.500000, st0 = 0, d = 0, v = 3.005193))
-#  
-#  qdiffusion(xp*quantiles, "lower",  a = 0.667287, t0 = 0.254885, sv = 0.448566, sz = 0.416655, z = 0.500000, st0 = 0, d = 0, v = 3.005193)
-#  
-#  
-#  head(rr98)
-#  rr98 %>% filter(id == "jf" & instruction=="speed") %>% group_by(strength_bin, response) %>%
-#    summarise(n = n(), med_rt = median(rt), q1 = quantile(rt, 0.1), q5 = quantile(rt, 0.9))
 #  
 #  
 
@@ -278,8 +250,8 @@ pars_separate_l$strength_bin <- factor(substr(pars_separate_l$strength_bin, 3,3)
                                        levels = as.character(seq_len(length(bins)-1)))
 #pars_separate_l <- inner_join(pars_separate_l, agg_rr98_bin)
 pars_separate_l <- pars_separate_l  %>% group_by(id, instruction, strength_bin) %>%
-  mutate(resp_prop = pdiffusion(rt=20, boundary="lower", 
-                                a=a, v=v, t0=t0, sz = sz, z=z, sv=sv, st0=st0)) 
+  mutate(resp_prop = pdiffusion(rt=Inf, response="lower", 
+                                a=a, v=v, t0=t0, sz = sz, z=a*z, sv=sv, st0=st0))
 
 p1 <- xyplot(prop ~ strength_bin|id + instruction, agg_rr98_bin, type = "b", auto.key = 
                list(lines = TRUE), ylab = "Proportion of 'dark' responses", col = "grey")
@@ -297,12 +269,12 @@ p2 + as.layer(p1) + as.layer(p3)
 
 # get predicted quantiles (uses predicted response proportions)
 separate_pred_dark <- pars_separate_l %>% do(as.data.frame(t(
-  qdiffusion(quantiles*.$resp_prop, boundary="lower", 
-             a=.$a, v=.$v, t0=.$t0, sz = .$sz, z = .$z, sv=.$sv, st0=.$st0)))) %>% 
+  qdiffusion(quantiles*.$resp_prop, response="lower", 
+             a=.$a, v=.$v, t0=.$t0, sz = .$sz, z = .$z*.$a, sv=.$sv, st0=.$st0)))) %>% 
   ungroup() %>% gather("quantiles", "dark", V1:V5)
 separate_pred_light <- pars_separate_l %>% do(as.data.frame(t(
-  qdiffusion(quantiles*(1-.$resp_prop), boundary="upper", 
-             a=.$a, v=.$v, t0=.$t0, sz = .$sz, z = .$z, sv=.$sv, st0=.$st0)))) %>% 
+  qdiffusion(quantiles*(1-.$resp_prop), response="upper", 
+             a=.$a, v=.$v, t0=.$t0, sz = .$sz, z = .$z*.$a, sv=.$sv, st0=.$st0)))) %>% 
   ungroup() %>% gather("quantiles", "light", V1:V5)
 
 #separate_pred_light %>% filter(is.na(light))
@@ -392,7 +364,7 @@ p2 + as.layer(p1) + as.layer(p1e)
 ## ------------------------------------------------------------------------
 
 # objective function for diffusion with 1 a. loops over drift to assign drift rates to strength
-objective_lba_separate <- function(pars, rt, boundary, drift, ...) {
+objective_lba_separate <- function(pars, rt, response, drift, ...) {
   non_v_pars <- grep("^v", names(pars), invert = TRUE, value = TRUE)
   base_par <- length(non_v_pars)  # number of non-drift parameters
   densities <- vector("numeric", length(rt))
@@ -400,7 +372,7 @@ objective_lba_separate <- function(pars, rt, boundary, drift, ...) {
     if (sum(drift == levels(drift)[i]) == 0) next
     densities[drift == levels(drift)[i]] <- dLBA(
       rt[drift == levels(drift)[i]], 
-      response=boundary[drift == levels(drift)[i]],
+      response=response[drift == levels(drift)[i]],
       A = list(pars["a_1"], pars["a_2"]), 
       b = max(pars["a_1"], pars["a_2"])+pars["b"], 
       t0 = pars["t0"], 
@@ -411,7 +383,7 @@ objective_lba_separate <- function(pars, rt, boundary, drift, ...) {
   return(-sum(log(densities)))
 }
 
-# function that creates random start values, also 
+# function that creates random start values
 get_start_lba <- function(base_par, n_drift = 10) {
   start1 <- c(
     a = runif(1, 0.5, 3),
@@ -478,7 +450,8 @@ knitr::kable(lba_pars)
 #  lba_pars_separate_b <- as.data.frame(fits_separate_lba_b %>% group_by(id, instruction) %>% do(as.data.frame(t(.$lba[[1]][["par"]]))) %>% ungroup())
 #  lba_pars_separate_b$ll <- (fits_separate_lba_b %>% group_by(id, instruction) %>% do(ll = .$lba[[1]][["objective"]]) %>%  summarize(ll2 = mean(ll[[1]])) %>% as.data.frame())[[1]]
 #  
-#  all.equal(lba_pars_separate, lba_pars_separate_b, tolerance = 0.001)
+#  all.equal(lba_pars_separate, lba_pars_separate_b, tolerance = 0.02)
+#  save(fits_separate_lba, fits_separate_lba_b, file = "rr98_full-lba_fits.rda")
 #  
 #  fits_separate_lba_b <- rr98 %>%
 #    group_by(id, instruction) %>% # we loop across both, id and instruction
@@ -493,10 +466,10 @@ knitr::kable(lba_pars)
 #  
 #  fits_separate_lba_b[2,"lba"][[1]]
 #  
-#  save(fits_separate_lba, file = "rr98_full-lba_fits.rda")
+#  
 #  
 #  # objective function for LBA with 1 a. loops over drift to assign drift rates to strength
-#  objective_lba_separate <- function(pars, rt, boundary, drift, ...) {
+#  objective_lba_separate <- function(pars, rt, response, drift, ...) {
 #    non_v_pars <- grep("^v", names(pars), invert = TRUE, value = TRUE)
 #    base_par <- length(non_v_pars)  # number of non-drift parameters
 #    densities <- vector("numeric", length(rt))
@@ -504,7 +477,7 @@ knitr::kable(lba_pars)
 #      if (sum(drift == levels(drift)[i]) == 0) next
 #      densities[drift == levels(drift)[i]] <- dLBA(
 #        rt[drift == levels(drift)[i]],
-#        response=boundary[drift == levels(drift)[i]],
+#        response=response[drift == levels(drift)[i]],
 #        A = pars["a"], b = pars["a"]+pars["b"],
 #        t0 = pars["t0"],
 #        mean_v = pars[((i-1)*2+1):((i-1)*2+2)],
@@ -515,7 +488,7 @@ knitr::kable(lba_pars)
 #  }
 #  
 #  # objective function for diffusion with 1 a. loops over drift to assign drift rates to strength
-#  objective_lba_separate <- function(pars, rt, boundary, drift, ...) {
+#  objective_lba_separate <- function(pars, rt, response, drift, ...) {
 #    non_v_pars <- grep("^v", names(pars), invert = TRUE, value = TRUE)
 #    base_par <- length(non_v_pars)  # number of non-drift parameters
 #    densities <- vector("numeric", length(rt))
@@ -523,7 +496,7 @@ knitr::kable(lba_pars)
 #      if (sum(drift == levels(drift)[i]) == 0) next
 #      densities[drift == levels(drift)[i]] <- dLBA(
 #        rt[drift == levels(drift)[i]],
-#        response=boundary[drift == levels(drift)[i]],
+#        response=response[drift == levels(drift)[i]],
 #        A = list(pars["a_1"], pars["a_2"]), b = list(pars["a_1"]+pars["b"], pars["a_2"]+pars["b"]),
 #        t0 = pars["t0"],
 #        mean_v = c(pars[i], 1-pars[i]),
