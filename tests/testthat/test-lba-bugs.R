@@ -2,6 +2,7 @@
 context("n1PDF: Known Bugs")
 
 test_that("n1PDF and n1CDF pass arguments correctly", {
+  skip_if_not_installed("glba")
   data(bh08, package = "glba")
   bh08 <- bh08[bh08$rt>.180&bh08$rt<2,]
   ny <- dim(bh08)[1]
@@ -34,7 +35,7 @@ test_that("n1PDF and n1CDF pass arguments correctly", {
 })
 
 test_that("named parameter vectors do not cause havoc", {
-  xx <- rlba_norm(10, A=0.5, b=1, t0 = 0.5, mean_v=1.2, sd_v=0.2)
+  xx <- rLBA(10, A=0.5, b=1, t0 = 0.5, mean_v=1.2, sd_v=0.2)
   expect_is(n1PDF(xx$rt, A=0.5, b=1, t0 = 0.5, mean_v=c(1.2, 1.0), sd_v=0.2, st0 = c(xx = 0.1), silent =TRUE), "numeric")
   expect_is(n1PDF(xx$rt, A=0.5, b=1, t0 = c(aa=0.5), mean_v=c(1.2, 1.0), sd_v=c(xx=0.2), silent =TRUE), "numeric")
   expect_is(n1PDF(xx$rt, A=c(xx=0.5), b=c(A = 1), t0 = 0.5, mean_v=c(1.2, 1.0), sd_v=c(xx=0.2), silent =TRUE), "numeric")
@@ -176,7 +177,7 @@ test_that("glba and rtdists agree", {
       return(logl=log(weights*ll))
     }
   
-  
+  skip_if_not_installed("glba")
   data(bh08, package = "glba")
   # remove extreme RTs
   bh08 <- bh08[bh08$rt>.180&bh08$rt<2,]
@@ -204,4 +205,8 @@ test_that("glba and rtdists agree", {
 })
 
 
-
+test_that("n1PDF works with named lists", {
+  rt1 <- rLBA(500, A=0.5, b=1, t0 = 0.5, mean_v=list(a=2.4, b=1.6), sd_v=list(v=1,A=1.2))
+  expect_is(sum(log(n1PDF(rt1$rt, A=list(r1=0.5,r2=.5), b=1, t0 = 0.5, mean_v=list(b=seq(2.0, 2.4, length.out = 500), c=1.6), sd_v=c(xx=1,hans=1.2)))), "numeric")
+  expect_is(sum(log(n1PDF(rt1$rt, A=.5, b=list(r1=0.5,r2=.5), t0 = 0.5, mean_v=list(b=seq(2.0, 2.4, length.out = 500), c=1.6), sd_v=c(xx=1,hans=1.2)))), "numeric")
+})

@@ -1,3 +1,29 @@
+Changes to Version 0.7-x (released May 2017)
+
+  o Performance of diffusion functions and rLBA increased, especially for calls
+    with parameters that differ trialwise. As a consequence single rlba_... 
+    functions now return a matrix and no data.frame.
+  
+  o All C functions are now accessed via Rcpp.
+  
+  o pdiffusion uses the C++ CDF (no more numerical integration in R). 
+  
+  o sv can produce slow errors, and sz fast erros (this was the wrong way around
+    in the documentation). Thanks to Gabriel Tillman for noticing that.
+    
+  o removed a bug in the pdiffusion C code letting rtdists hang indefinitely
+    (see https://github.com/rtdists/rtdists/pull/3). Thanks to Tomas Kalibera 
+    for the fix.
+    
+  o removed bug: meanlog_v and sdlog_v were not recycled for the lnorm LBA.
+  
+  o Ratcliff and Rouder (1998) vignette now uses nested data.frames and 
+    purrr::map(i.e., more proper use of the tidyverse).
+    
+  o removed bug when non-accumulator LBA parameters where passed as a named 
+    list.
+
+
 Changes to Version 0.6-6 (bug-fix version, released July 2016)
 
   o Bug when passing start point with s != 1 removed.

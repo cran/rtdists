@@ -19,7 +19,7 @@
 #' 
 #' @details These functions are mainly for internal purposes. We do not recommend to use them. Use the high-level functions described in \code{/link{LBA}} instead.
 #' 
-#' @return All functions starting with a \code{d} return the density (PDF), all functions starting with \code{p} return the distribution function (CDF), and all functions starting with \code{r} return random response times and responses (in a \code{data.frame}).
+#' @return All functions starting with a \code{d} return the density (PDF), all functions starting with \code{p} return the distribution function (CDF), and all functions starting with \code{r} return random response times and responses (in a \code{matrix}).
 #' 
 #' @note Density (i.e., \code{dlba_}), distribution (i.e., \code{plba_}), and random derivative (i.e., \code{rlba_}) functions are vectorized for all parameters (i.e., in case parameters are not of the same length as \code{rt}, parameters are recycled). Furthermore, the random derivative functions also accept a matrix of length \code{n} in which each column corresponds to a accumulator specific value (see \code{\link{rLBA}} for a more user-friendly way).
 #' 
@@ -62,7 +62,7 @@ make_r <- function(drifts, n,b,A,n_v,t0,st0=0) {
     resp <- resp[!bad]
     rt <- rt[!bad]
   }
-  data.frame(rt=rt,response=resp)
+  cbind(rt=rt,response=resp)
 }
 
 rem_t0 <- function(rt, t0) pmax(rt - t0, 0)
@@ -460,8 +460,8 @@ dlba_lnorm <- function(rt,A,b,t0,meanlog_v, sdlog_v, robust = FALSE) {
   A <- rep(A, length.out = nn)
   b <- rep(b, length.out = nn)
   t0 <- rep(t0, length.out = nn)
-  mean_v <- rep(meanlog_v, length.out = nn)
-  sd_v <- rep(sdlog_v, length.out = nn)
+  meanlog_v <- rep(meanlog_v, length.out = nn)
+  sdlog_v <- rep(sdlog_v, length.out = nn)
   if (any(b < A)) stop(error_message_b_smaller_A)
   
   dlba_lnorm_core(rt=rt,A=A,b=b,t0=t0,meanlog_v=meanlog_v, sdlog_v=sdlog_v, robust = robust, nn=nn)
