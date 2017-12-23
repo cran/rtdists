@@ -161,7 +161,15 @@ dLBA <-  function(rt, response, A, b, t0, ..., st0=0, distribution = c("norm", "
   out <- vector("numeric", nn)
   for (i in unique(response)) {
     sel <- response == i
-    out[sel] <- do.call(n1PDF, args = c(rt=list(rt[sel]), A = list(A[c(i, seq_len(n_v)[-i])]), b = list(b[c(i, seq_len(n_v)[-i])]), t0 = list(t0[c(i, seq_len(n_v)[-i])]), lapply(dots, function(x) x[c(i, seq_len(n_v)[-i])]), distribution=distribution, args.dist=args.dist, silent=TRUE, st0 = list(st0)))
+    out[sel] <- do.call(n1PDF, 
+                        args = c(rt=list(rt[sel]), 
+                                 A = list(A[c(i, seq_len(n_v)[-i])]), 
+                                 b = list(b[c(i, seq_len(n_v)[-i])]), 
+                                 t0 = list(t0[c(i, seq_len(n_v)[-i])]), 
+                                 lapply(dots, function(x) x[c(i, seq_len(n_v)[-i])]), 
+                                 distribution=distribution, 
+                                 args.dist=list(args.dist), 
+                                 silent=TRUE, st0 = list(st0)))
   }
   return(out)
 }
@@ -229,8 +237,16 @@ pLBA <-  function(rt, response, A, b, t0, ..., st0=0, distribution = c("norm", "
   out <- vector("numeric", nn)
   for (i in unique(response)) {
     sel <- response == i
-    if(!all(rt[sel] == sort(rt[sel])))  stop("rt needs to be sorted (per response)")
-    out[sel] <- do.call(n1CDF, args = c(rt=list(rt[sel]), A = list(A[c(i, seq_len(n_v)[-i])]), b = list(b[c(i, seq_len(n_v)[-i])]), t0 = list(t0[c(i, seq_len(n_v)[-i])]), lapply(dots, function(x) x[c(i, seq_len(n_v)[-i])]), distribution=distribution, args.dist=args.dist, silent=TRUE, st0 = list(st0)))
+    #if(!all(rt[sel] == sort(rt[sel])))  stop("rt needs to be sorted (per response)")
+    out[sel] <- do.call(n1CDF, 
+                        args = c(rt=list(rt[sel]), 
+                                 A = list(A[c(i, seq_len(n_v)[-i])]), 
+                                 b = list(b[c(i, seq_len(n_v)[-i])]), 
+                                 t0 = list(t0[c(i, seq_len(n_v)[-i])]), 
+                                 lapply(dots, function(x) x[c(i, seq_len(n_v)[-i])]), 
+                                 distribution=distribution, 
+                                 args.dist=list(args.dist), 
+                                 silent=TRUE, st0 = list(st0)))
   }
   return(out)
 }
@@ -359,17 +375,18 @@ rLBA <- function(n,A,b,t0, ..., st0=0, distribution = c("norm", "gamma", "freche
   parameter_factor <- factor(parameter_char, levels = unique(parameter_char))
   parameter_indices <- split(seq_len(nn), f = parameter_factor)
   
-  out <- cbind(rt = rep(0, n), response = rep(0, n))  
+  out <- vector("list", length(parameter_indices))
   for (i in seq_len(length(parameter_indices))) {
     ok_rows <- parameter_indices[[i]]
     tmp_dots <- lapply(dots, function(x) sapply(x, "[[", i = ok_rows[1]))
-    out[ok_rows,] <- do.call(rng, 
+    out[[i]] <- do.call(rng, 
                         args = c(n=list(length(ok_rows)), 
                                  A = list(sapply(A, "[", i = ok_rows)), 
                                  b = list(sapply(b, "[", i = ok_rows)), 
                                  t0 = list(sapply(t0, "[", i = ok_rows)), 
                                  st0 = list(st0[ok_rows]), 
-                                 tmp_dots, args.dist=args.dist))
+                                 tmp_dots, args.dist))
   }
+  out <- do.call("rbind", out)
   as.data.frame(out)
 }
