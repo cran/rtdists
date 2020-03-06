@@ -19,7 +19,7 @@ License: GPL (>= 3)
 BugReports: https://github.com/rtdists/rtdists/issues
 VignetteBuilder: knitr
 Authors@R: c( person(given="Henrik", family="Singmann",
-       email="singmann+rtdists@gmail.com", role=c("aut", "cre"),
+       email="singmann@gmail.com", role=c("aut", "cre"),
        comment=c(ORCID="0000-0002-4842-3657")),
        person(given="Scott", family="Brown", role=c("aut")),
        person(given="Matthew", family="Gretton", role=c("aut")),
@@ -28,10 +28,10 @@ Authors@R: c( person(given="Henrik", family="Singmann",
        person(given="Jochen", family="Voss", role=c("ctb")),
        person(given="Andrew", family="Terry", role=c("ctb")) )
 LazyData: true
-Version: 0.10-0
+Version: 0.11-2
 RoxygenNote: 6.1.1
 NeedsCompilation: yes
-Packaged: 2019-10-07 18:55:14 UTC; henrik
+Packaged: 2020-03-06 00:51:52 UTC; henrik
 Author: Henrik Singmann [aut, cre] (<https://orcid.org/0000-0002-4842-3657>),
   Scott Brown [aut],
   Matthew Gretton [aut],
@@ -39,6 +39,6 @@ Author: Henrik Singmann [aut, cre] (<https://orcid.org/0000-0002-4842-3657>),
   Andreas Voss [ctb],
   Jochen Voss [ctb],
   Andrew Terry [ctb]
-Maintainer: Henrik Singmann <singmann+rtdists@gmail.com>
+Maintainer: Henrik Singmann <singmann@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-10-08 12:10:03 UTC
+Date/Publication: 2020-03-06 09:20:02 UTC

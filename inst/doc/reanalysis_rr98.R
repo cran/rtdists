@@ -1,4 +1,4 @@
-## ---- fig.height=4, fig.width=7, message=FALSE, warning=FALSE------------
+## ---- fig.height=4, fig.width=7, message=FALSE, warning=FALSE-----------------
 require(rtdists)
 require(dplyr)   # for data manipulations and looping
 require(tidyr)   # for data manipulations
@@ -23,7 +23,7 @@ xyplot(prop ~ strength|id, agg_rr98, group = instruction, type = "b",
 
 
 
-## ---- fig.height=6, fig.width=7------------------------------------------
+## ---- fig.height=6, fig.width=7-----------------------------------------------
 
 quantiles <- c(0.1, 0.3, 0.5, 0.7, 0.9)
 ## aggregate data for quantile plot
@@ -43,7 +43,7 @@ xyplot(rt ~ strength|id + instruction, quantiles_rr98, group = quantile, type = 
 
 
 
-## ---- fig.height=4, fig.width=7------------------------------------------
+## ---- fig.height=4, fig.width=7-----------------------------------------------
 
 #bins <- c(-0.5, 5.5, 10.5, 13.5, 16.5, 19.5, 25.5, 32.5) # seven bins like RR98
 bins <- c(-0.5, 10.5, 13.5, 16.5, 19.5, 32.5)
@@ -69,12 +69,12 @@ knitr::kable(
 
 
 
-## ---- fig.height=4, fig.width=7------------------------------------------
+## ---- fig.height=4, fig.width=7-----------------------------------------------
 xyplot(mean ~ strength_bin|id, agg_rr98_bin, group = instruction, type = "b", 
        auto.key = list(lines = TRUE), ylab = "Proportion of 'dark' responses")
 
 
-## ---- fig.height=6, fig.width=7------------------------------------------
+## ---- fig.height=6, fig.width=7-----------------------------------------------
 
 ## aggregate data for quantile plot
 quantiles_rr98_bin <- rr98  %>% 
@@ -92,7 +92,7 @@ xyplot(rt ~ strength_bin|id + instruction, quantiles_rr98_bin, group = quantile,
        auto.key = FALSE, ylab = "RT (in seconds)", subset = instruction == "accuracy")
 
 
-## ---- fig.height=6, fig.width=7------------------------------------------
+## ---- fig.height=6, fig.width=7-----------------------------------------------
 
 agg2_rr98_response <- rr98  %>% 
   group_by(id, instruction, strength_bin, response) %>% 
@@ -121,13 +121,13 @@ p1 + as.layer(p2)
 
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 d_nested <- rr98 %>% 
   group_by(id, instruction) %>% # we loop across both, id and instruction
   nest()
 d_nested
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # objective function for diffusion with 1 a. loops over drift to assign drift rates to strength
 objective_diffusion_separate <- function(pars, rt, response, drift, ...) {
   non_v_pars <- grep("^v", names(pars), invert = TRUE, value = TRUE)
@@ -148,7 +148,7 @@ objective_diffusion_separate <- function(pars, rt, response, drift, ...) {
 }
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 # function that creates random start values, also 
 get_start <- function(base_par, n_drift = 5) {
@@ -201,12 +201,12 @@ ensure_fit <-
 }
 
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 load("rr98_full-diffusion_fits.rda")
 load("rr98_full-lba_fits.rda")
 
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fit_diffusion <- d_nested %>%
 #    mutate(fit =
 #             map(data,
@@ -215,7 +215,7 @@ load("rr98_full-lba_fits.rda")
 #                              base_pars = c("a", "t0", "sv", "sz", "z")))) %>%
 #    unnest(fit)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  require(parallel)
 #  
 #  fit_diffusion <- d_nested
@@ -227,7 +227,7 @@ load("rr98_full-lba_fits.rda")
 #      mc.cores = 2)
 #  fit_diffusion <- unnest(fit_diffusion, fit)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 fit_diffusion$data <- NULL
 if (!("st0" %in% colnames(fit_diffusion))) fit_diffusion$st0 <- 0
@@ -236,7 +236,7 @@ if (!("sz" %in% colnames(fit_diffusion))) fit_diffusion$sz <- 0.1
 knitr::kable(fit_diffusion)
 
 
-## ----obtain_fits_not_run, eval = FALSE, include = FALSE------------------
+## ----obtain_fits_not_run, eval = FALSE, include = FALSE-----------------------
 #  
 #  require(parallel)
 #  
@@ -265,7 +265,7 @@ knitr::kable(fit_diffusion)
 #  
 #  
 
-## ---- fig.height=5, fig.width=7, message=FALSE---------------------------
+## ---- fig.height=5, fig.width=7, message=FALSE--------------------------------
 
 
 # get predicted response proportions
@@ -289,7 +289,7 @@ p3 <- xyplot(resp_prop ~ strength_bin|id + instruction, pars_separate_l, type = 
 p2 + as.layer(p1) + as.layer(p3)
 
 
-## ---- fig.height=6, fig.width=7, message=FALSE---------------------------
+## ---- fig.height=6, fig.width=7, message=FALSE--------------------------------
 
 # get predicted quantiles (uses predicted response proportions)
 separate_pred_dark <- pars_separate_l %>% do(as.data.frame(t(
@@ -335,7 +335,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, separate_pred, type = "b",
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=6, fig.width=7------------------------------------------
+## ---- fig.height=6, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -353,7 +353,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, separate_pred, type = "b",
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=7, fig.width=7------------------------------------------
+## ---- fig.height=7, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, group = quantile, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -369,7 +369,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, separate_pred, group = quantiles, 
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=7, fig.width=7------------------------------------------
+## ---- fig.height=7, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, group = quantile, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -385,7 +385,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, separate_pred, group = quantiles, 
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 # objective function for diffusion with 1 a. loops over drift to assign drift rates to strength
 objective_lba_separate <- function(pars, rt, response, drift, ...) {
@@ -424,7 +424,7 @@ get_start_lba <- function(base_par, n_drift = 10) {
 }
 
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  
 #  fit_lba <- d_nested %>%
 #    mutate(fit =
@@ -437,7 +437,7 @@ get_start_lba <- function(base_par, n_drift = 10) {
 #    unnest(fit)
 #  
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  require(parallel)
 #  
 #  fit_lba <- d_nested
@@ -451,11 +451,11 @@ get_start_lba <- function(base_par, n_drift = 10) {
 #      mc.cores = 2)
 #  fit_lba <- unnest(fit_lba, fit)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 knitr::kable(fit_lba)
 
 
-## ----obtain_fits_lba, eval = FALSE, include = FALSE----------------------
+## ----obtain_fits_lba, eval = FALSE, include = FALSE---------------------------
 #  fit_lba <- d_nested %>%
 #    mutate(fit =
 #             map(data,
@@ -523,7 +523,7 @@ knitr::kable(fit_lba)
 #  }
 #  
 
-## ---- fig.height=5, fig.width=7, message=FALSE---------------------------
+## ---- fig.height=5, fig.width=7, message=FALSE--------------------------------
 # get predicted response proportions
 lba_pars_separate_l <- fit_lba %>% gather("strength_bin", "v", starts_with("v"))
 lba_pars_separate_l$strength_bin <- factor(substr(lba_pars_separate_l$strength_bin, 3,3), 
@@ -545,7 +545,7 @@ p3 <- xyplot(resp_prop ~ strength_bin|id + instruction, lba_pars_separate_l, typ
 p2 + as.layer(p1) + as.layer(p3)
 
 
-## ---- fig.height=6, fig.width=7, message=FALSE---------------------------
+## ---- fig.height=6, fig.width=7, message=FALSE--------------------------------
 
 # get predicted quantiles (uses predicted response proportions)
 lba_separate_pred_dark <- lba_pars_separate_l %>% do(as.data.frame(t(
@@ -580,7 +580,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, lba_separate_pred, type = "b",
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=6, fig.width=7------------------------------------------
+## ---- fig.height=6, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -598,7 +598,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, lba_separate_pred, type = "b",
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=7, fig.width=7------------------------------------------
+## ---- fig.height=7, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, group = quantile, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -614,7 +614,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, lba_separate_pred, group = quantil
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=7, fig.width=7------------------------------------------
+## ---- fig.height=7, fig.width=7-----------------------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, group = quantile, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -630,7 +630,7 @@ p2 <- xyplot(rt ~ strength_bin|id + response, lba_separate_pred, group = quantil
 p2 + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=6.5, fig.width=7, message=FALSE-------------------------
+## ---- fig.height=6.5, fig.width=7, message=FALSE------------------------------
 
 key <- simpleKey(text = c("data", "LBA", "Diffusion"), lines = TRUE)
 key$lines$col <- c("grey", "black", "black")
@@ -653,7 +653,7 @@ p4 <- xyplot(resp_prop ~ strength_bin|id + instruction, pars_separate_l, type = 
 p4 + as.layer(p2) + as.layer(p1) + as.layer(p3)
 
 
-## ---- fig.height=6.5, fig.width=7, message=FALSE-------------------------
+## ---- fig.height=6.5, fig.width=7, message=FALSE------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 
@@ -677,7 +677,7 @@ p3 <- xyplot(rt ~ strength_bin|id + response, separate_pred, type = "b",
 p3 + as.layer(p2) + as.layer(p1) + as.layer(p1e)
 
 
-## ---- fig.height=6.5, fig.width=7, message=FALSE-------------------------
+## ---- fig.height=6.5, fig.width=7, message=FALSE------------------------------
 
 p1 <- xyplot(rt ~ strength_bin|id+response, agg2_rr98_response, type = "b", 
              auto.key = list(lines = TRUE), ylab = "RT (in seconds)", 

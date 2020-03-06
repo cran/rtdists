@@ -23,10 +23,11 @@ pdiffusion(rt, response = "upper", a, v, t0, z = 0.5 * a, d = 0,
 qdiffusion(p, response = "upper", a, v, t0, z = 0.5 * a, d = 0,
   sz = 0, sv = 0, st0 = 0, s = 1, precision = 3, maxt = 20,
   interval = c(0, 10), scale_p = FALSE, scale_max = Inf,
-  stop_on_error = FALSE)
+  stop_on_error = FALSE, max_diff = 1e-04)
 
 rdiffusion(n, a, v, t0, z = 0.5 * a, d = 0, sz = 0, sv = 0,
-  st0 = 0, s = 1, precision = 3, stop_on_error = TRUE)
+  st0 = 0, s = 1, precision = 3, stop_on_error = TRUE, maxt = 20,
+  interval = c(0, 10), method = c("fastdm", "qdiffusion"))
 }
 \arguments{
 \item{t0}{non-decision time or response time constant (in seconds). Lower bound for the duration of all non-decisional processes (encoding and response execution). Typical range: 0.1 < \code{t0} < 0.5}
@@ -67,7 +68,11 @@ rdiffusion(n, a, v, t0, z = 0.5 * a, d = 0, sz = 0, sv = 0,
 
 \item{scale_max}{numerical scalar. Value at which maximally predicted RT should be calculated if \code{scale_p} is \code{TRUE}.}
 
+\item{max_diff}{numeric. Maximum acceptable difference between desired and observed probability of the quantile function (\code{qdiffusion}).}
+
 \item{n}{is a desired number of observations.}
+
+\item{method}{character. Experimentally implementation of an alternative way of generating random variates via the quantile function (\code{qdiffusion}) and random uniform value. For simple calls, the default method \code{"fastdm"} is dramatically faster.}
 }
 \value{
 \code{ddiffusion} gives the density, \code{pdiffusion} gives the distribution function, \code{qdiffusion} gives the quantile function (i.e., predicted RTs), and \code{rdiffusion} generates random response times and decisions (returning a \code{data.frame} with columns \code{rt} (numeric) and \code{response} (factor)).
@@ -99,9 +104,7 @@ The parameterization of the non-decisional components, \code{t0} and \code{st0},
 
 The default diffusion constant \code{s} is 1 and not 0.1 as in most applications of Roger Ratcliff and others.
 
-We have changed the parameterization of the start point \code{z} which is now the absolute start point in line with most published literature (it was the relative start point in previous versions of \pkg{rtdists}). 
-
-RTs need to be sorted (in increasing order) for \code{pdiffusion}.
+We have changed the parameterization of the start point \code{z} which is now the absolute start point in line with most published literature (it was the relative start point in previous versions of \pkg{rtdists}).
 }
 \examples{
 
@@ -133,12 +136,12 @@ ll_diffusion <- function(pars, rt, response)
 
 \dontrun{)
 start <- c(runif(2, 0.5, 3), 0.1, runif(3, 0, 0.5))
-names(start) <- c("a", "v", "t0", "sz", "st0", "sv")runif
+names(start) <- c("a", "v", "t0", "sz", "st0", "sv")
 recov <- nlminb(start, ll_diffusion, lower = 0, rt=rt1$rt, response=rt1$response)
 round(recov$par, 3)
 #     a     v    t0    sz   st0    sv 
 # 1.019 1.879 0.496 0.000 0.000 0.389 
-## results of course depend on random seed for rdiffusion and 
+## results of course depend on random seed for rdiffusion and runif
 }
 
 
