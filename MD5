@@ -1,4 +1,4 @@
-1500da00ea1c186d385de3b59af76546 *DESCRIPTION
+7dc96f5beb6f57b2557d64777c399c39 *DESCRIPTION
 d2631a2ea24973ace16c2eca8b771e86 *NAMESPACE
 857bbfacf71b281207022cfc968acdbf *NEWS
 8d9ad04632dd453298936dc621cfb3a4 *R/RcppExports.R
@@ -15,7 +15,7 @@ c0eb131a61162e9697fe8b648889ae06 *data/rr98.rda
 d3e62a3016446466a0173ab5f4dc7306 *data/speed_acc.RData
 b14bfca3bf29d4640fcaff99df4c2820 *inst/doc/reanalysis_rr98.R
 2c58dc26bfc04360a52343f187150330 *inst/doc/reanalysis_rr98.Rmd
-1f256bc3bdbeb40a3a461f3480814564 *inst/doc/reanalysis_rr98.html
+bbf3ddd59dbe5fa1325448807ae52af7 *inst/doc/reanalysis_rr98.html
 7956fc005d1909a824d1d3ae9c433f20 *inst/extdata/AUTHORS
 acaa3ce07090051e8abc8d7d76ce2445 *inst/extdata/lba-math.R
 ab8f7a2e2289365ed46d55ecd4f84f9e *inst/extdata/n1CDF_diff_example.RData
@@ -31,7 +31,7 @@ a27916870a1d2e7c59e7bd81808fa05c *src/CDF_no_variability.h
 c85c93f03c11db102268b10c41e20677 *src/CDF_st0_variability.h
 859be7cde534e8c3e746dce4ec1ba5ad *src/CDF_sv_variability.h
 13acf107aa585cc54de1bff204d4b778 *src/CDF_sz_variability.h
-0a609b4275e4bb1b11540757b9eda535 *src/Density.h
+331f68c310109f85458ffd6fecb6eeb7 *src/Density.h
 116b6835c22cd6e880d4755367186ca8 *src/Distribution.h
 06692212588a05b77539b461567f3606 *src/FCalculator.h
 773fcce38eacd409f9e033ace598661c *src/FController.h

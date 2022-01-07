@@ -28,10 +28,10 @@ Authors@R: c( person(given="Henrik", family="Singmann",
        person(given="Jochen", family="Voss", role=c("ctb")),
        person(given="Andrew", family="Terry", role=c("ctb")) )
 LazyData: true
-Version: 0.11-4
+Version: 0.11-5
 RoxygenNote: 6.1.1
 NeedsCompilation: yes
-Packaged: 2021-12-14 07:58:09 UTC; singm
+Packaged: 2022-01-03 19:06:08 UTC; singm
 Author: Henrik Singmann [aut, cre] (<https://orcid.org/0000-0002-4842-3657>),
   Scott Brown [aut],
   Matthew Gretton [aut],
@@ -41,4 +41,4 @@ Author: Henrik Singmann [aut, cre] (<https://orcid.org/0000-0002-4842-3657>),
   Andrew Terry [ctb]
 Maintainer: Henrik Singmann <singmann@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-12-14 15:30:11 UTC
+Date/Publication: 2022-01-07 14:02:42 UTC
